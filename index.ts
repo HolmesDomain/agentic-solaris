@@ -28,7 +28,14 @@ async function main() {
     await agent.runTask(surveysTask);
 
     // Step 3: Select Survey
-    const selectSurveyTask = `Select the survey with the lowest estimated time and a descriptor of similar format: "Survey (5353051...)". 
+    let strategyDescription = "that is first available";
+    if (config.SURVEY_STRATEGY === "shortest_available") {
+      strategyDescription = "that takes the shortest amount of time";
+    } else if (config.SURVEY_STRATEGY === "highest_payout") {
+      strategyDescription = "that offers the highest payout/reward";
+    }
+
+    const selectSurveyTask = `Select the survey ${strategyDescription} and a descriptor of similar format: "Survey (5353051...)". 
     Wait for the survey modal to load.
     Begin the survey and wait for it to load, it will open a new tab.`;
     await agent.runTask(selectSurveyTask);

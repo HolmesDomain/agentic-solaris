@@ -9,7 +9,8 @@ const envSchema = z.object({
     MODEL_NAME: z.string().default("x-ai/grok-4.1-fast:free"),
     CASHINSTYLE_EMAIL: z.string(),
     CASHINSTYLE_PASSWORD: z.string(),
-    TARGET_URL: z.string().default(""),
+    TARGET_URL: z.string().default("https://cashinstyle.com"),
+    SURVEY_STRATEGY: z.enum(["shortest_available", "highest_payout", "first_available"]).default("first_available"),
 }).transform((data) => {
     const apiKey = data.LLM_API_KEY || data.OPENROUTER_API_KEY || "not-needed";
     const baseUrl = data.LLM_BASE_URL || data.OPENROUTER_BASE_URL;
@@ -30,6 +31,7 @@ const processEnv = {
     CASHINSTYLE_EMAIL: process.env.CASHINSTYLE_EMAIL,
     CASHINSTYLE_PASSWORD: process.env.CASHINSTYLE_PASSWORD,
     TARGET_URL: process.env.TARGET_URL,
+    SURVEY_STRATEGY: process.env.SURVEY_STRATEGY,
 };
 
 const parsedEnv = envSchema.safeParse(processEnv);
