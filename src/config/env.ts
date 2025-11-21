@@ -6,7 +6,7 @@ const envSchema = z.object({
     OPENROUTER_BASE_URL: z.string().default("https://openrouter.ai/api/v1"),
     LLM_API_KEY: z.string().optional(),
     LLM_BASE_URL: z.string().optional(),
-    MODEL_NAME: z.string().default("x-ai/grok-4.1-fast:free"),
+    MODEL_NAME: z.string().default("x-ai/grok-4.1-fast"),
     CASHINSTYLE_EMAIL: z.string(),
     CASHINSTYLE_PASSWORD: z.string(),
     TARGET_URL: z.string().default("https://cashinstyle.com"),

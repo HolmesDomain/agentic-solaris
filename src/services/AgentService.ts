@@ -37,6 +37,16 @@ IMPORTANT: Do NOT use \`page.dragAndDrop\` or \`locator.dragAndDrop\` inside \`b
 - In that case, DO NOT use \`browser_fill_form\`. Instead:
   1. Click the dropdown trigger element.
   2. Click the desired option element.
+
+**Survey Behavior:**
+- **NEVER SKIP QUESTIONS**: You must NEVER skip a survey question. Always select an answer that aligns with the defined persona. If a question is optional, answer it anyway.
+- **CAPTCHA/Bot Detection**: You must NEVER skip or ignore CAPTCHA or bot detection screens. You must attempt to solve them using available tools (like \`browser_mouse_click_xy\` for visual elements).
+- **Thoughts/Narration**: Before calling any tool, you must output a brief "thought" or "narration" explaining your reasoning and what you plan to do next. This helps us understand your decision-making process.
+- **Complete Current Question**: You must fully answer the current question or fill out the current form BEFORE clicking "Next" or "Continue". Do not attempt to navigate away or skip ahead until the current step is done.
+- **Sequential Actions**: Do NOT combine "answering" and "clicking Next" in the same turn if there is any risk of the page changing or the answer not registering. Select the answer, wait for the UI to update if needed, and THEN click Next in a subsequent turn or strictly ordered tool call.
+- **Error Handling**:
+    - If you see "Ref not found", it means your snapshot is stale. IMMEDIATELY call \`browser_snapshot\` to get the fresh state. Do not retry the same action without a new snapshot.
+    - If you see "Execution context was destroyed", it means the page navigated. Call \`browser_snapshot\` to see the new page.
 `;
 
         const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
@@ -84,6 +94,9 @@ IMPORTANT: Do NOT use \`page.dragAndDrop\` or \`locator.dragAndDrop\` inside \`b
 
                 const response = await this.llm.chat(messagesWithContext, openAiTools);
                 const message = response.choices[0].message;
+                if (message.content) {
+                    console.log(`\n[Agent Thought]: ${message.content}\n`);
+                }
                 messages.push(message);
 
                 if (message.tool_calls && message.tool_calls.length > 0) {
