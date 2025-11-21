@@ -1,8 +1,8 @@
 import { config } from "./src/config/env.js";
-import { PERSONA } from "./src/data/persona.js";
 import { McpService } from "./src/services/McpService.js";
 import { LlmService } from "./src/services/LlmService.js";
 import { AgentService } from "./src/services/AgentService.js";
+import { PersonaService } from "./src/services/PersonaService.js";
 
 async function main() {
   console.log("Starting Survey Automation Agent...");
@@ -10,6 +10,7 @@ async function main() {
   // Initialize Services
   const mcp = new McpService();
   const llm = new LlmService();
+  const personaService = new PersonaService();
   const agent = new AgentService(mcp, llm);
 
   try {
@@ -44,7 +45,7 @@ async function main() {
 
     // Step 4: Loop (Chunks)
     const MAX_CHUNKS = 40; // Updated as per user request
-    const QUESTIONS_PER_CHUNK = 4;
+    const QUESTIONS_PER_CHUNK = 3;
 
     for (let i = 0; i < MAX_CHUNKS; i++) {
       console.log(`\n--- Chunk ${i + 1} / ${MAX_CHUNKS} ---`);
@@ -52,7 +53,7 @@ async function main() {
       // 1. Answer Questions (Fresh Context)
       const answerTask = `
       You are completing a survey. You are a 23-year-old IT Consultant embodying this persona:
-      ${JSON.stringify(PERSONA.persona, null, 2)}
+      ${personaService.getFormattedPersona()}
 
       CRITICAL TASK: You MUST answer EXACTLY ${QUESTIONS_PER_CHUNK} survey questions.
 
