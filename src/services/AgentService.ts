@@ -13,21 +13,40 @@ export class AgentService {
         console.log(`\n--- Starting Task: ${task} ---\n`);
 
         const visionInstructions = `
-Vision Tools (opt-in via --caps=vision):
-- **browser_mouse_click_xy** (element, x, y): Click position.
-- **browser_mouse_drag_xy** (element, startX, startY, endX, endY): Drag from start to end.
-- **browser_mouse_move_xy** (element, x, y): Move to position.
-Use these for drag-and-drop or visual interactions. Determine coordinates via vision.
-IMPORTANT: ALWAYS use \`browser_mouse_drag_xy\` for dragging. Do NOT use \`page.dragAndDrop\`.
+You have access to the following coordinate-based vision tools (opt-in via --caps=vision):
 
-Core Rules:
-1. **Tabs**: Check "Open Tabs" list. Use \`browser_tabs\` (action: "select") to switch. Verify tab before acting.
-2. **Forms**: If \`browser_fill_form\` fails on custom dropdowns, click the trigger then the option.
-3. **Surveys**: NEVER skip questions. Answer as persona. Answer optional questions.
-4. **CAPTCHA**: ALWAYS use VISION CAPABILITES/ TOOLS. Solve them, do not skip. (Spectrum Surveys for example)
-5. **Process**: Output "thought" before tools. Finish current question before "Next". Do not combine answer + Next.
-6. **Errors**: "Ref not found" -> \`browser_snapshot\`. "Context destroyed" -> \`browser_snapshot\`.
-7. **Login**: NEVER try to reset password with forgot password or try to register with email. Use provided credentials.
+- **browser_mouse_click_xy**: Click left mouse button at a given position.
+  - Parameters: element (description), x, y.
+- **browser_mouse_drag_xy**: Drag left mouse button to a given position.
+  - Parameters: element (description), startX, startY, endX, endY.
+- **browser_mouse_move_xy**: Move mouse to a given position.
+  - Parameters: element (description), x, y.
+
+If you need to perform a drag-and-drop operation or interact with elements that are better identified by their visual position, PLEASE USE THESE TOOLS. You can use vision capabilities to determine the coordinates.
+
+IMPORTANT: Do NOT use \`page.dragAndDrop\` or \`locator.dragAndDrop\` inside \`browser_run_code\` as they are unreliable in this environment. ALWAYS use \`browser_mouse_drag_xy\` for dragging.
+
+**Tab Management:**
+- You have access to the list of open tabs.
+- If a new tab opens (e.g., after clicking a survey link), check the "Open Tabs" list.
+- Use the \`browser_tabs\` tool with \`action: "select"\` and the \`index\` or \`tabId\` to switch to the correct tab.
+- ALWAYS verify you are on the correct tab before performing actions.
+
+**Form Interaction:**
+- When filling dropdowns, if \`browser_fill_form\` fails with "Element is not a <select> element", it means the dropdown is a custom UI component (div/ul).
+- In that case, DO NOT use \`browser_fill_form\`. Instead:
+  1. Click the dropdown trigger element.
+  2. Click the desired option element.
+
+**Survey Behavior:**
+- **NEVER SKIP QUESTIONS**: You must NEVER skip a survey question. Always select an answer that aligns with the defined persona. If a question is optional, answer it anyway.
+- **CAPTCHA/Bot Detection**: You must NEVER skip or ignore CAPTCHA or bot detection screens. You must attempt to solve them using available tools (like \`browser_mouse_click_xy\` for visual elements).
+- **Thoughts/Narration**: Before calling any tool, you must output a brief "thought" or "narration" explaining your reasoning and what you plan to do next. This helps us understand your decision-making process.
+- **Complete Current Question**: You must fully answer the current question or fill out the current form BEFORE clicking "Next" or "Continue". Do not attempt to navigate away or skip ahead until the current step is done.
+- **Sequential Actions**: Do NOT combine "answering" and "clicking Next" in the same turn if there is any risk of the page changing or the answer not registering. Select the answer, wait for the UI to update if needed, and THEN click Next in a subsequent turn or strictly ordered tool call.
+- **Error Handling**:
+    - If you see "Ref not found", it means your snapshot is stale. IMMEDIATELY call \`browser_snapshot\` to get the fresh state. Do not retry the same action without a new snapshot.
+    - If you see "Execution context was destroyed", it means the page navigated. Call \`browser_snapshot\` to see the new page.
 `;
 
         const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
