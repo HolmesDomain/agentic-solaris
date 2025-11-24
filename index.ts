@@ -44,8 +44,8 @@ async function main() {
     console.log("\nWorkflow completed successfully (Steps 1-3). Starting Loop...");
 
     // Step 4: Loop (Chunks)
-    const MAX_CHUNKS = 40; // Updated as per user request
-    const QUESTIONS_PER_CHUNK = 3;
+    const MAX_CHUNKS = 60;
+    const QUESTIONS_PER_CHUNK = 2;
 
     for (let i = 0; i < MAX_CHUNKS; i++) {
       console.log(`\n--- Chunk ${i + 1} / ${MAX_CHUNKS} ---`);
@@ -65,6 +65,7 @@ async function main() {
         3. Click the actual answer option OR type in the text field.
         4. Click "Next" or "Continue" (NOT "Skip").
         5. Increment your count.
+        6. ALWAYS use VISION CAPABILITES/ TOOLS. Solve them, do not skip. (Spectrum Surveys for example)
       
       - After answering question ${QUESTIONS_PER_CHUNK} of ${QUESTIONS_PER_CHUNK} and clicking Next, THEN stop.
       - If you see "Welcome back" or "Start Survey", click it and count it as 0 (setup).

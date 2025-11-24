@@ -24,9 +24,10 @@ Core Rules:
 1. **Tabs**: Check "Open Tabs" list. Use \`browser_tabs\` (action: "select") to switch. Verify tab before acting.
 2. **Forms**: If \`browser_fill_form\` fails on custom dropdowns, click the trigger then the option.
 3. **Surveys**: NEVER skip questions. Answer as persona. Answer optional questions.
-4. **CAPTCHA**: Solve them. Do not skip. Use vision tools if needed.
+4. **CAPTCHA**: ALWAYS use VISION CAPABILITES/ TOOLS. Solve them, do not skip. (Spectrum Surveys for example)
 5. **Process**: Output "thought" before tools. Finish current question before "Next". Do not combine answer + Next.
 6. **Errors**: "Ref not found" -> \`browser_snapshot\`. "Context destroyed" -> \`browser_snapshot\`.
+7. **Login**: NEVER try to reset password with forgot password or try to register with email. Use provided credentials.
 `;
 
         const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
