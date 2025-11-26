@@ -31,7 +31,7 @@ const processEnv = {
     OPENROUTER_BASE_URL: process.env.OPENROUTER_BASE_URL,
     LLM_API_KEY: process.env.LLM_API_KEY,
     LLM_BASE_URL: process.env.LLM_BASE_URL,
-    LLM_MODEL: process.env.MODEL_NAME, // Mapped from MODEL_NAME
+    MODEL_NAME: process.env.MODEL_NAME,
     CASHINSTYLE_EMAIL: process.env.CASHINSTYLE_EMAIL,
     CASHINSTYLE_PASSWORD: process.env.CASHINSTYLE_PASSWORD,
     TARGET_URL: process.env.TARGET_URL,
@@ -49,3 +49,9 @@ if (!parsedEnv.success) {
 }
 
 export const config = parsedEnv.data;
+
+// Debug: Log configuration values
+console.log("📋 Configuration loaded:");
+console.log(`  MAX_PAGES: ${config.MAX_PAGES}`);
+console.log(`  RESTART_AFTER_PAGES: ${config.RESTART_AFTER_PAGES}`);
+console.log(`  PAGE_IDLE_TIMEOUT_MINUTES: ${config.PAGE_IDLE_TIMEOUT_MS / 60000} minutes (${config.PAGE_IDLE_TIMEOUT_MS}ms)`);

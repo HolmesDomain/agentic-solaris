@@ -130,42 +130,26 @@ export class PlaywrightWrapperService {
         // 1. Lazy Cleanup: Check for idle tabs before executing the tool
         await this.cleanupIdleTabs();
 
-        // Check if this is a tool that creates new pages
+        // Check if this is a tool that creates new pages (intentionally)
         const createsPage =
             (name === "browser_navigate") ||
             (name === "browser_tabs" && args.action === "new");
 
-        if (createsPage) {
-            // If maxPages is 0, we treat it as unlimited
-            if (this.maxPages === 0) {
-                // Skip limit check
-            } else {
-                const currentPageCount = await this.getPageCount();
+        // Pre-check: Block explicit page creation if we're at the limit
+        if (createsPage && this.maxPages > 0) {
+            const currentPageCount = await this.getPageCount();
 
-                // For browser_navigate, it might create a page or reuse existing
-                // We need to check if there are any tabs before allowing
-                if (name === "browser_navigate" && currentPageCount === 0) {
-                    // First navigate always creates a page, allow it if under limit
-                    if (currentPageCount >= this.maxPages) {
-                        return {
-                            content: [{
-                                type: "text",
-                                text: `Error: Tab limit reached (${this.maxPages}). Please close a tab first using browser_tabs with action 'close'.`
-                            }],
-                            isError: true
-                        };
-                    }
-                } else if (name === "browser_tabs" && args.action === "new") {
-                    // Explicitly creating a new tab
-                    if (currentPageCount >= this.maxPages) {
-                        return {
-                            content: [{
-                                type: "text",
-                                text: `Error: Tab limit reached (${this.maxPages}). Cannot create new tab. Please close a tab first using browser_tabs with action 'close'.`
-                            }],
-                            isError: true
-                        };
-                    }
+            // Only block browser_tabs with action "new" - browser_navigate might reuse existing
+            if (name === "browser_tabs" && args.action === "new") {
+                if (currentPageCount >= this.maxPages) {
+                    console.log(`[PlaywrightWrapper] ❌ Blocked: Tab limit reached (${currentPageCount}/${this.maxPages})`);
+                    return {
+                        content: [{
+                            type: "text",
+                            text: `Error: Tab limit reached (${this.maxPages}). Cannot create new tab. Please close a tab first using browser_tabs with action 'close'.`
+                        }],
+                        isError: true
+                    };
                 }
             }
         }
@@ -174,11 +158,44 @@ export class PlaywrightWrapperService {
         const result = await this.mcp.callTool(name, args);
 
         // Update activity timestamp for the active tab (after tool execution)
-        // We do this because the tool might have changed the active tab (e.g. select, new)
         const tabs = await this.getTabsState();
         const activeTab = tabs.find(t => t.active);
         if (activeTab) {
             this.tabActivity.set(activeTab.index, Date.now());
+        }
+
+        // CRITICAL: Enforce MAX_PAGES after EVERY tool call
+        // This catches pages created by JavaScript (window.open, target="_blank", etc.)
+        if (this.maxPages > 0 && !result.isError) {
+            const currentPageCount = tabs.length;
+
+            if (currentPageCount > this.maxPages) {
+                const excessCount = currentPageCount - this.maxPages;
+                console.log(`[PlaywrightWrapper] ⚠️  LIMIT EXCEEDED: ${currentPageCount}/${this.maxPages} tabs open. Closing ${excessCount} oldest inactive tab(s)...`);
+
+                // Close oldest inactive tabs (not the active one)
+                const inactiveTabs = tabs
+                    .filter(t => !t.active)
+                    .map(t => ({
+                        ...t,
+                        lastActive: this.tabActivity.get(t.index) || 0
+                    }))
+                    .sort((a, b) => a.lastActive - b.lastActive); // Oldest first
+
+                for (let i = 0; i < excessCount && i < inactiveTabs.length; i++) {
+                    const tabToClose = inactiveTabs[i];
+                    try {
+                        console.log(`[PlaywrightWrapper] 🗑️  Closing excess tab ${tabToClose.index}: ${tabToClose.url}`);
+                        await this.mcp.callTool("browser_tabs", { action: "close", index: tabToClose.index });
+                        this.tabActivity.delete(tabToClose.index);
+
+                        // Wait a bit to let the closure complete before closing the next one
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                    } catch (e) {
+                        console.error(`[PlaywrightWrapper] Failed to close excess tab ${tabToClose.index}:`, e);
+                    }
+                }
+            }
         }
 
         // Track page creation and check restart threshold
