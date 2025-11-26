@@ -39,6 +39,7 @@ IMPORTANT: Do NOT use \`page.dragAndDrop\` or \`locator.dragAndDrop\` inside \`b
   2. Click the desired option element.
 
 **Survey Behavior:**
+- **Survey Preferences**: Avoid surveys from provider: "Prime Surveys". 
 - **NEVER SKIP QUESTIONS**: You must NEVER skip a survey question. Always select an answer that aligns with the defined persona. If a question is optional, answer it anyway.
 - **CAPTCHA/Bot Detection**: You must NEVER skip or ignore CAPTCHA or bot detection screens. You must attempt to solve them using available tools (like \`browser_mouse_click_xy\` for visual elements).
 - **Thoughts/Narration**: Before calling any tool, you must output a brief "thought" or "narration" explaining your reasoning and what you plan to do next. This helps us understand your decision-making process.

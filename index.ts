@@ -1,5 +1,6 @@
 import { config } from "./src/config/env.js";
 import { McpService } from "./src/services/McpService.js";
+import { PlaywrightWrapperService } from "./src/services/PlaywrightWrapperService.js";
 import { LlmService } from "./src/services/LlmService.js";
 import { AgentService } from "./src/services/AgentService.js";
 import { PersonaService } from "./src/services/PersonaService.js";
@@ -8,10 +9,16 @@ async function main() {
   console.log("Starting Survey Automation Agent...");
 
   // Initialize Services
-  const mcp = new McpService();
+  const mcpRaw = new McpService();
+  const mcp = new PlaywrightWrapperService(
+    mcpRaw,
+    config.MAX_PAGES,
+    config.RESTART_AFTER_PAGES,
+    config.PAGE_IDLE_TIMEOUT_MS
+  );
   const llm = new LlmService();
   const personaService = new PersonaService();
-  const agent = new AgentService(mcp, llm);
+  const agent = new AgentService(mcp as any, llm);
 
   try {
     await mcp.connect();
@@ -44,7 +51,7 @@ async function main() {
     console.log("\nWorkflow completed successfully (Steps 1-3). Starting Loop...");
 
     // Step 4: Loop (Chunks)
-    const MAX_CHUNKS = 60;
+    const MAX_CHUNKS = 30;
     const QUESTIONS_PER_CHUNK = 2;
 
     for (let i = 0; i < MAX_CHUNKS; i++) {
@@ -56,6 +63,9 @@ async function main() {
       ${personaService.getFormattedPersona()}
 
       CRITICAL TASK: You MUST answer EXACTLY ${QUESTIONS_PER_CHUNK} survey questions.
+
+      IMPORTANT CHECKS:
+      - Did you start a survey and forget it in a separate browser tab? Check your open tabs if you are not on a survey page.
 
       IMPORTANT RULES:
       - Keep a mental count: "Question 1 of ${QUESTIONS_PER_CHUNK}", "Question 2 of ${QUESTIONS_PER_CHUNK}", etc.
@@ -77,6 +87,18 @@ async function main() {
       const isComplete = await agent.checkIfComplete();
       if (isComplete) {
         console.log("Survey Completed!");
+
+        // Close all browser tabs
+        console.log("Closing browser tabs...");
+        const tabs = await mcp.getTabsState();
+        for (const tab of tabs) {
+          try {
+            await mcp.callTool("browser_tabs", { action: "close", index: tab.index });
+          } catch (e) {
+            console.error(`Failed to close tab ${tab.index}:`, e);
+          }
+        }
+
         break;
       } else {
         console.log("Survey not complete, continuing...");
@@ -86,7 +108,7 @@ async function main() {
   } catch (error) {
     console.error("Workflow failed:", error);
   } finally {
-    await mcp.close();
+    await mcpRaw.close();
   }
 }
 

@@ -56,4 +56,28 @@ export class McpService {
         await this.client.close();
         this.isConnected = false;
     }
+
+    async restart() {
+        console.log("Restarting MCP connection...");
+        await this.close();
+
+        // Recreate transport and client
+        this.transport = new StdioClientTransport({
+            command: "npx",
+            args: ["-y", "@playwright/mcp@latest", "--isolated", "--caps=vision"],
+        });
+
+        this.client = new Client(
+            {
+                name: "playwright-client",
+                version: "1.0.0",
+            },
+            {
+                capabilities: {},
+            }
+        );
+
+        await this.connect();
+        console.log("✅ MCP connection restarted");
+    }
 }
