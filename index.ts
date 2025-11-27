@@ -24,9 +24,10 @@ async function main() {
     await mcp.connect();
 
     // Step 1: Login
-    const loginTask = `Visit ${config.TARGET_URL}. 
+    // Step 1: Login
+    const loginTask = `Visit ${config.TARGET_HOST}. 
     Check if we are logged in. 
-    If not, login with email: ${config.CASHINSTYLE_EMAIL} and password: ${config.CASHINSTYLE_PASSWORD}.
+    If not, login with email: ${config.TARGET_EMAIL} and password: ${config.TARGET_PASSWORD}.
     Wait for login to complete.`;
 
     await agent.runTask(loginTask);
@@ -51,8 +52,9 @@ async function main() {
     console.log("\nWorkflow completed successfully (Steps 1-3). Starting Loop...");
 
     // Step 4: Loop (Chunks)
-    const MAX_CHUNKS = 30;
-    const QUESTIONS_PER_CHUNK = 2;
+    const MAX_CHUNKS = 40;
+    const QUESTIONS_PER_CHUNK = 4;
+    let surveyCompleted = false;
 
     for (let i = 0; i < MAX_CHUNKS; i++) {
       console.log(`\n--- Chunk ${i + 1} / ${MAX_CHUNKS} ---`);
@@ -87,6 +89,7 @@ async function main() {
       const isComplete = await agent.checkIfComplete();
       if (isComplete) {
         console.log("Survey Completed!");
+        surveyCompleted = true;
 
         // Close all browser tabs
         console.log("Closing browser tabs...");
@@ -105,8 +108,17 @@ async function main() {
       }
     }
 
+    if (!surveyCompleted) {
+      console.log("\n❌ Max chunks reached without completion. Exiting with error to trigger restart.");
+      process.exit(1);
+    } else {
+      console.log("\n✅ Workflow completed successfully.");
+      process.exit(0);
+    }
+
   } catch (error) {
     console.error("Workflow failed:", error);
+    process.exit(1);
   } finally {
     await mcpRaw.close();
   }

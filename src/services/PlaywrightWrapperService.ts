@@ -228,7 +228,8 @@ export class PlaywrightWrapperService {
     }
 
     async getTools() {
-        return await this.mcp.getTools();
+        const tools = await this.mcp.getTools();
+        return tools.filter(tool => tool.name !== "browser_run_code");
     }
 
     async connect() {
