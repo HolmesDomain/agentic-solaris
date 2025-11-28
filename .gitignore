@@ -23,3 +23,9 @@ coverage/
 
 # Dir
 src/data/
+
+# PM2 env files
+.env.style
+.env.prime
+
+output/

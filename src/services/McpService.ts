@@ -1,6 +1,8 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import path from "path";
+import fs from "fs";
 
 export class McpService {
     private client: Client;
@@ -8,9 +10,23 @@ export class McpService {
     private isConnected: boolean = false;
 
     constructor() {
+        const outputDir = path.resolve(process.cwd(), "output");
+
+        // Clear output directory on startup
+        if (fs.existsSync(outputDir)) {
+            fs.rmSync(outputDir, { recursive: true, force: true });
+        }
+        fs.mkdirSync(outputDir, { recursive: true });
+
         this.transport = new StdioClientTransport({
             command: "npx",
-            args: ["-y", "@playwright/mcp@latest", "--isolated", "--caps=vision"],
+            args: [
+                "-y",
+                "@playwright/mcp@latest",
+                "--isolated",
+                "--caps=vision",
+                `--output-dir=${outputDir}`
+            ],
         });
 
         this.client = new Client(
@@ -40,10 +56,10 @@ export class McpService {
 
     async callTool(name: string, args: any): Promise<CallToolResult> {
         if (!this.isConnected) await this.connect();
-        return await this.client.callTool({
+        return (await this.client.callTool({
             name,
             arguments: args,
-        });
+        })) as CallToolResult;
     }
 
     async close() {
@@ -64,7 +80,13 @@ export class McpService {
         // Recreate transport and client
         this.transport = new StdioClientTransport({
             command: "npx",
-            args: ["-y", "@playwright/mcp@latest", "--isolated", "--caps=vision"],
+            args: [
+                "-y",
+                "@playwright/mcp@latest",
+                "--isolated",
+                "--caps=vision",
+                `--output-dir=${path.resolve(process.cwd(), "output")}`
+            ],
         });
 
         this.client = new Client(

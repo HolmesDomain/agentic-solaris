@@ -2,50 +2,35 @@ import OpenAI from "openai";
 import { z } from "zod";
 import { McpService } from "./McpService.js";
 import { LlmService } from "./LlmService.js";
+import fs from "fs";
+import path from "path";
+import { config } from "../config/env.js";
 
 export class AgentService {
     constructor(private mcp: McpService, private llm: LlmService) { }
 
     async runTask(
         task: string,
-        systemMessage: string = "You are a helpful assistant that can control a web browser using Playwright tools."
+        systemMessage: string = "You are a helpful assistant that can control a web browser using Microsoft Playwright MCP vision tools."
     ): Promise<string> {
         console.log(`\n--- Starting Task: ${task} ---\n`);
 
         const visionInstructions = `
-You have access to the following coordinate-based vision tools (opt-in via --caps=vision):
-
+- **STRICTLY** stick to the domain provided in the task: ${config.TARGET_HOST}. 
+- **DO NOT** navigate to other survey sites (like Swagbucks, Branded Surveys, etc.) unless explicitly redirected there by the survey platform itself.
+- If you find yourself on an unexpected domain (e.g., google.com, swagbucks.com) without a clear reason, immediately navigate back to the start URL.
+You have access to the following coordinate-based vision tools:
 - **browser_mouse_click_xy**: Click left mouse button at a given position.
-  - Parameters: element (description), x, y.
+- Parameters: element (description), x, y.
 - **browser_mouse_drag_xy**: Drag left mouse button to a given position.
-  - Parameters: element (description), startX, startY, endX, endY.
+- Parameters: element (description), startX, startY, endX, endY.
 - **browser_mouse_move_xy**: Move mouse to a given position.
-  - Parameters: element (description), x, y.
-
-If you need to perform a drag-and-drop operation or interact with elements that are better identified by their visual position, PLEASE USE THESE TOOLS. You can use vision capabilities to determine the coordinates.
-
-**Tab Management:**
-- You have access to the list of open tabs.
-- If a new tab opens (e.g., after clicking a survey link), check the "Open Tabs" list.
-- Use the \`browser_tabs\` tool with \`action: "select"\` and the \`index\` or \`tabId\` to switch to the correct tab.
+- Parameters: element (description), x, y.
+- If you need to perform a drag-and-drop operation or interact with elements that are better identified by their visual position, PLEASE USE THESE TOOLS. You can use vision capabilities to determine the coordinates.
 - ALWAYS verify you are on the correct tab before performing actions.
-
-**Form Interaction:**
-- When filling dropdowns, if \`browser_fill_form\` fails with "Element is not a <select> element", it means the dropdown is a custom UI component (div/ul).
-- In that case, DO NOT use \`browser_fill_form\`. Instead:
-  1. Click the dropdown trigger element.
-  2. Click the desired option element.
-
-**Survey Behavior:**
-- **Survey Preferences**: Avoid surveys from provider: "Prime Surveys". 
 - **NEVER SKIP QUESTIONS**: You must NEVER skip a survey question. Always select an answer that aligns with the defined persona. If a question is optional, answer it anyway.
 - **CAPTCHA/Bot Detection**: You must NEVER skip or ignore CAPTCHA or bot detection screens. If you encounter anything similar to a CAPTCHA test, you MUST first use \`browser_snapshot\` to get a clear view of the challenge before attempting to solve it using available tools (like \`browser_mouse_click_xy\` for visual elements).
-- **Thoughts/Narration**: Before calling any tool, you must output a brief "thought" or "narration" explaining your reasoning and what you plan to do next. This helps us understand your decision-making process.
-- **Complete Current Question**: You must fully answer the current question or fill out the current form BEFORE clicking "Next" or "Continue". Do not attempt to navigate away or skip ahead until the current step is done.
-- **Sequential Actions**: Do NOT combine "answering" and "clicking Next" in the same turn if there is any risk of the page changing or the answer not registering. Select the answer, wait for the UI to update if needed, and THEN click Next in a subsequent turn or strictly ordered tool call.
-- **Error Handling**:
-    - If you see "Ref not found", it means your snapshot is stale. IMMEDIATELY call \`browser_snapshot\` to get the fresh state. Do not retry the same action without a new snapshot.
-    - If you see "Execution context was destroyed", it means the page navigated. Call \`browser_snapshot\` to see the new page.
+- **Complete Question BEFORE clicking "Next"**
 `;
 
         const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
@@ -126,6 +111,15 @@ If you need to perform a drag-and-drop operation or interact with elements that 
 
                         console.log(`Executing ${toolName} with args: `, toolArgs);
 
+                        // Intercept browser_take_screenshot to enforce filename structure
+                        if (toolName === "browser_take_screenshot") {
+                            const ts = Date.now();
+                            const newFilename = `screenshot_${ts}.png`;
+                            // @ts-ignore
+                            toolArgs.filename = newFilename;
+                            console.log(`[AgentService] 📸 Enforcing screenshot filename: ${newFilename}`);
+                        }
+
                         try {
                             const result = await this.mcp.callTool(toolName, toolArgs);
 
@@ -141,6 +135,22 @@ If you need to perform a drag-and-drop operation or interact with elements that 
                                 .map((c: any) => {
                                     if (c.type === "text") return c.text;
                                     if (c.type === "image") {
+                                        // Save image to output directory
+                                        try {
+                                            const outputDir = path.resolve(process.cwd(), "output");
+                                            if (!fs.existsSync(outputDir)) {
+                                                fs.mkdirSync(outputDir, { recursive: true });
+                                            }
+                                            const timestamp = Date.now();
+                                            const ext = c.mimeType.split("/")[1] || "png";
+                                            const filename = `snapshot_${timestamp}.${ext}`;
+                                            const filepath = path.join(outputDir, filename);
+                                            fs.writeFileSync(filepath, Buffer.from(c.data, "base64"));
+                                            console.log(`[AgentService] 📸 Saved snapshot to ${filepath}`);
+                                        } catch (e) {
+                                            console.error("[AgentService] Failed to save snapshot:", e);
+                                        }
+
                                         imageContent = {
                                             type: "image_url",
                                             image_url: {

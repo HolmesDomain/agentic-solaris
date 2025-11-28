@@ -1,4 +1,9 @@
-import "dotenv/config";
+// Only load .env file if NOT running under PM2
+// PM2 sets pm_id environment variable, and uses env_file option instead
+if (!process.env.pm_id) {
+    require("dotenv/config");
+}
+
 import { z } from "zod";
 
 const envSchema = z.object({

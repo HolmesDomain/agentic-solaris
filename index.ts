@@ -23,20 +23,16 @@ async function main() {
   try {
     await mcp.connect();
 
-    // Step 1: Login
-    // Step 1: Login
     const loginTask = `Visit ${config.TARGET_HOST}. 
     Check if we are logged in. 
-    If not, login with email: ${config.TARGET_EMAIL} and password: ${config.TARGET_PASSWORD}.
-    Wait for login to complete.`;
+    If not, login with email: ${config.TARGET_EMAIL} and password: ${config.TARGET_PASSWORD}.`;
 
     await agent.runTask(loginTask);
 
-    // Step 2: Go to Surveys
     const surveysTask = "Once logged in, on the left side of the dashboard click Surveys.";
+
     await agent.runTask(surveysTask);
 
-    // Step 3: Select Survey
     let strategyDescription = "that is first available";
     if (config.SURVEY_STRATEGY === "shortest_available") {
       strategyDescription = "that takes the shortest amount of time";
@@ -51,7 +47,6 @@ async function main() {
 
     console.log("\nWorkflow completed successfully (Steps 1-3). Starting Loop...");
 
-    // Step 4: Loop (Chunks)
     const MAX_CHUNKS = 40;
     const QUESTIONS_PER_CHUNK = 4;
     let surveyCompleted = false;
@@ -59,7 +54,6 @@ async function main() {
     for (let i = 0; i < MAX_CHUNKS; i++) {
       console.log(`\n--- Chunk ${i + 1} / ${MAX_CHUNKS} ---`);
 
-      // 1. Answer Questions (Fresh Context)
       const answerTask = `
       You are completing a survey. You are a 23-year-old IT Consultant embodying this persona:
       ${personaService.getFormattedPersona()}
