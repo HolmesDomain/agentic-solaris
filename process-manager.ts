@@ -20,6 +20,7 @@ function parseEnv(filePath: string) {
 // Load environment files
 const envPrime = parseEnv(path.join(import.meta.dir, ".env.prime"));
 const envStyle = parseEnv(path.join(import.meta.dir, ".env.style"));
+const envGrab = parseEnv(path.join(import.meta.dir, ".env.grab"));
 
 interface AppConfig {
     name: string;
@@ -38,16 +39,25 @@ const config: { apps: AppConfig[] } = {
         //     script: "dist/index.js",
         //     cwd: import.meta.dir,
         //     env: envStyle,
-        //     instances: 11,
+        //     instances: 10,
         //     staggerDelay: 10000, // 10 seconds
         //     autorestart: true,
         // },
+        // {
+        //     name: "solaris-prime",
+        //     script: "dist/index.js",
+        //     cwd: import.meta.dir,
+        //     env: envPrime,
+        //     instances: 7,
+        //     staggerDelay: 20000, // 20 seconds
+        //     autorestart: true,
+        // },
         {
-            name: "solaris-prime",
+            name: "solaris-grab",
             script: "dist/index.js",
             cwd: import.meta.dir,
-            env: envPrime,
-            instances: 6,
+            env: envGrab,
+            instances: 2,
             staggerDelay: 10000, // 10 seconds
             autorestart: true,
         },
@@ -180,7 +190,6 @@ function shutdown() {
     const checkInterval = setInterval(() => {
         if (processes.size === 0) {
             clearInterval(checkInterval);
-            console.log("All processes stopped. Goodbye!");
             process.exit(0);
         }
     }, 500);

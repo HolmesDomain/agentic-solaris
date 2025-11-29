@@ -47,8 +47,8 @@ async function main() {
 
     console.log("\nWorkflow completed successfully (Steps 1-3). Starting Loop...");
 
-    const MAX_CHUNKS = 40;
-    const QUESTIONS_PER_CHUNK = 4;
+    const MAX_CHUNKS = 35;
+    const QUESTIONS_PER_CHUNK = 3;
     let surveyCompleted = false;
 
     for (let i = 0; i < MAX_CHUNKS; i++) {
@@ -59,11 +59,15 @@ async function main() {
       ${personaService.getFormattedPersona()}
 
       CRITICAL TASK: You MUST answer EXACTLY ${QUESTIONS_PER_CHUNK} survey questions.
+      CURRENT PROGRESS: Chunk ${i + 1} of ${MAX_CHUNKS}.
 
       IMPORTANT CHECKS:
+      - **STRICTLY** stick to the domain provided in the task: ${config.TARGET_HOST}. 
+      - If you find yourself on an unexpected domain (e.g., google.com, swagbucks.com) without a clear reason, immediately navigate back to the start URL.
       - Did you start a survey and forget it in a separate browser tab? Check your open tabs if you are not on a survey page.
-
-      IMPORTANT RULES:
+      - ALWAYS verify you are on the correct tab before performing actions.
+      - **NEVER SKIP QUESTIONS**: You must NEVER skip a survey question. Always select an answer that aligns with the defined persona. If a question is optional, answer it anyway.
+      - **Complete Question BEFORE clicking "Next"**
       - Keep a mental count: "Question 1 of ${QUESTIONS_PER_CHUNK}", "Question 2 of ${QUESTIONS_PER_CHUNK}", etc.
       - For EACH question:
         1. Read the question carefully.
@@ -73,11 +77,22 @@ async function main() {
         5. Increment your count.
         6. ALWAYS use VISION CAPABILITES/ TOOLS. Solve them, do not skip. (Spectrum Surveys for example)
       
-      - After answering question ${QUESTIONS_PER_CHUNK} of ${QUESTIONS_PER_CHUNK} and clicking Next, THEN stop.
       - If you see "Welcome back" or "Start Survey", click it and count it as 0 (setup).
       `;
 
-      await agent.runTask(answerTask);
+      try {
+        await agent.runTask(answerTask);
+      } catch (error) {
+        console.error(`Error in Chunk ${i + 1}:`, error);
+        console.log("Attempting one retry for this chunk...");
+        try {
+          await agent.runTask(answerTask);
+        } catch (retryError) {
+          console.error(`Retry failed for Chunk ${i + 1}. Moving to next chunk logic (or exiting if critical).`, retryError);
+          // Depending on severity, we might want to break or continue. 
+          // For now, we'll let the completion check decide.
+        }
+      }
 
       // 2. Check if Complete
       const isComplete = await agent.checkIfComplete();
@@ -104,9 +119,25 @@ async function main() {
 
     if (!surveyCompleted) {
       console.log("\n❌ Max chunks reached without completion. Exiting with error to trigger restart.");
+
+      const stats = agent.getTokenStats();
+      console.log("\n=== Token Usage Summary ===");
+      console.log(`Total: ${stats.total_tokens}`);
+      console.log(`Prompt: ${stats.prompt_tokens}`);
+      console.log(`Completion: ${stats.completion_tokens}`);
+      console.log("===========================\n");
+
       process.exit(1);
     } else {
       console.log("\n✅ Workflow completed successfully.");
+
+      const stats = agent.getTokenStats();
+      console.log("\n=== Token Usage Summary ===");
+      console.log(`Total: ${stats.total_tokens}`);
+      console.log(`Prompt: ${stats.prompt_tokens}`);
+      console.log(`Completion: ${stats.completion_tokens}`);
+      console.log("===========================\n");
+
       process.exit(0);
     }
 

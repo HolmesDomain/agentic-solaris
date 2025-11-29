@@ -25,6 +25,8 @@ export class McpService {
                 "@playwright/mcp@latest",
                 "--isolated",
                 "--caps=vision",
+                // "--headless",
+                // "--browser=firefox",
                 `--output-dir=${outputDir}`
             ],
         });
@@ -85,6 +87,7 @@ export class McpService {
                 "@playwright/mcp@latest",
                 "--isolated",
                 "--caps=vision",
+                "--browser=firefox",
                 `--output-dir=${path.resolve(process.cwd(), "output")}`
             ],
         });

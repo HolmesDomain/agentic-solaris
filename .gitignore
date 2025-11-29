@@ -3,6 +3,7 @@ node_modules/
 
 # Environment variables
 .env
+.env.*
 
 # Build outputs
 dist/
@@ -23,6 +24,7 @@ coverage/
 
 # Dir
 src/data/
+!src/data/persona.json
 
 # PM2 env files
 .env.style

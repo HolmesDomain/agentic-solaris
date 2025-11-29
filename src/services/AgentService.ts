@@ -7,18 +7,28 @@ import path from "path";
 import { config } from "../config/env.js";
 
 export class AgentService {
+    private tokenStats = {
+        prompt_tokens: 0,
+        completion_tokens: 0,
+        total_tokens: 0
+    };
+
     constructor(private mcp: McpService, private llm: LlmService) { }
+
+    getTokenStats() {
+        return this.tokenStats;
+    }
 
     async runTask(
         task: string,
-        systemMessage: string = "You are a helpful assistant that can control a web browser using Microsoft Playwright MCP vision tools."
+        systemMessage: string = "You are a helpful assistant that can control a web browser using Microsoft Playwright MCP vision tools.",
+        maxTurns: number = 50
     ): Promise<string> {
         console.log(`\n--- Starting Task: ${task} ---\n`);
+        let turns = 0;
 
         const visionInstructions = `
 - **STRICTLY** stick to the domain provided in the task: ${config.TARGET_HOST}. 
-- **DO NOT** navigate to other survey sites (like Swagbucks, Branded Surveys, etc.) unless explicitly redirected there by the survey platform itself.
-- If you find yourself on an unexpected domain (e.g., google.com, swagbucks.com) without a clear reason, immediately navigate back to the start URL.
 You have access to the following coordinate-based vision tools:
 - **browser_mouse_click_xy**: Click left mouse button at a given position.
 - Parameters: element (description), x, y.
@@ -26,11 +36,7 @@ You have access to the following coordinate-based vision tools:
 - Parameters: element (description), startX, startY, endX, endY.
 - **browser_mouse_move_xy**: Move mouse to a given position.
 - Parameters: element (description), x, y.
-- If you need to perform a drag-and-drop operation or interact with elements that are better identified by their visual position, PLEASE USE THESE TOOLS. You can use vision capabilities to determine the coordinates.
-- ALWAYS verify you are on the correct tab before performing actions.
-- **NEVER SKIP QUESTIONS**: You must NEVER skip a survey question. Always select an answer that aligns with the defined persona. If a question is optional, answer it anyway.
 - **CAPTCHA/Bot Detection**: You must NEVER skip or ignore CAPTCHA or bot detection screens. If you encounter anything similar to a CAPTCHA test, you MUST first use \`browser_snapshot\` to get a clear view of the challenge before attempting to solve it using available tools (like \`browser_mouse_click_xy\` for visual elements).
-- **Complete Question BEFORE clicking "Next"**
 `;
 
         const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
@@ -57,6 +63,10 @@ You have access to the following coordinate-based vision tools:
         );
 
         while (true) {
+            turns++;
+            if (turns > maxTurns) {
+                throw new Error(`Max turns (${maxTurns}) reached for this task. Terminating to prevent infinite loop.`);
+            }
             try {
                 // Fetch open tabs to provide context
                 let tabContext = "";
@@ -77,6 +87,17 @@ You have access to the following coordinate-based vision tools:
                 ];
 
                 const response = await this.llm.chat(messagesWithContext, openAiTools);
+
+                // Track token usage
+                if (response.usage) {
+                    const { prompt_tokens, completion_tokens, total_tokens } = response.usage;
+                    this.tokenStats.prompt_tokens += prompt_tokens || 0;
+                    this.tokenStats.completion_tokens += completion_tokens || 0;
+                    this.tokenStats.total_tokens += total_tokens || 0;
+
+                    console.log(`[Token Usage] Step: ${total_tokens} (Prompt: ${prompt_tokens}, Completion: ${completion_tokens})`);
+                }
+
                 const message = response.choices[0].message;
                 if (message.content) {
                     console.log(`\n[Agent Thought]: ${message.content}\n`);
