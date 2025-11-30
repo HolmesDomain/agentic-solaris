@@ -7,6 +7,20 @@ import { PersonaService } from "./src/services/PersonaService.js";
 
 async function main() {
   console.log("Starting Survey Automation Agent...");
+  const startTime = Date.now();
+
+  // Start Global Restart Timer
+  if (config.RESTART_APP_AFTER_MS > 0) {
+    console.log(`🕒 App restart scheduled after ${(config.RESTART_APP_AFTER_MS / 60000).toFixed(1)} minutes.`);
+    setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      if (elapsed > config.RESTART_APP_AFTER_MS) {
+        console.log(`\n⏰ App has been running for ${(elapsed / 60000).toFixed(1)} minutes. Restart limit is ${(config.RESTART_APP_AFTER_MS / 60000).toFixed(1)} minutes.`);
+        console.log("Initiating scheduled restart...");
+        process.exit(0);
+      }
+    }, 60000); // Check every minute
+  }
 
   // Initialize Services
   const mcpRaw = new McpService();
@@ -64,6 +78,9 @@ async function main() {
       IMPORTANT CHECKS:
       - **STRICTLY** stick to the domain provided in the task: ${config.TARGET_HOST}. 
       - If you find yourself on an unexpected domain (e.g., google.com, swagbucks.com) without a clear reason, immediately navigate back to the start URL.
+      - **IF YOU ARE LOGGED OUT**: If you are redirected to a login page or asked to sign in, use these credentials:
+        - Email: ${config.TARGET_EMAIL}
+        - Password: ${config.TARGET_PASSWORD}
       - Did you start a survey and forget it in a separate browser tab? Check your open tabs if you are not on a survey page.
       - ALWAYS verify you are on the correct tab before performing actions.
       - **NEVER SKIP QUESTIONS**: You must NEVER skip a survey question. Always select an answer that aligns with the defined persona. If a question is optional, answer it anyway.

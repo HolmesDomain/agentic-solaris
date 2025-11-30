@@ -19,6 +19,7 @@ const envSchema = z.object({
     MAX_PAGES: z.coerce.number().int().nonnegative().default(0), // 0 = unlimited
     RESTART_AFTER_PAGES: z.coerce.number().int().nonnegative().default(0),
     PAGE_IDLE_TIMEOUT_MINUTES: z.coerce.number().nonnegative().default(10),
+    RESTART_APP_AFTER_MINUTES: z.coerce.number().nonnegative().default(0),
 }).transform((data) => {
     const apiKey = data.LLM_API_KEY || data.OPENROUTER_API_KEY || "not-needed";
     const baseUrl = data.LLM_BASE_URL || data.OPENROUTER_BASE_URL;
@@ -28,6 +29,7 @@ const envSchema = z.object({
         LLM_API_KEY: apiKey,
         LLM_BASE_URL: baseUrl,
         PAGE_IDLE_TIMEOUT_MS: Math.floor(data.PAGE_IDLE_TIMEOUT_MINUTES * 60 * 1000),
+        RESTART_APP_AFTER_MS: Math.floor(data.RESTART_APP_AFTER_MINUTES * 60 * 1000),
     };
 });
 
@@ -44,6 +46,7 @@ const processEnv = {
     MAX_PAGES: process.env.MAX_PAGES,
     RESTART_AFTER_PAGES: process.env.RESTART_AFTER_PAGES,
     PAGE_IDLE_TIMEOUT_MINUTES: process.env.PAGE_IDLE_TIMEOUT_MINUTES,
+    RESTART_APP_AFTER_MINUTES: process.env.RESTART_APP_AFTER_MINUTES,
 };
 
 const parsedEnv = envSchema.safeParse(processEnv);
@@ -60,3 +63,4 @@ console.log("📋 Configuration loaded:");
 console.log(`  MAX_PAGES: ${config.MAX_PAGES}`);
 console.log(`  RESTART_AFTER_PAGES: ${config.RESTART_AFTER_PAGES}`);
 console.log(`  PAGE_IDLE_TIMEOUT_MINUTES: ${config.PAGE_IDLE_TIMEOUT_MS / 60000} minutes (${config.PAGE_IDLE_TIMEOUT_MS}ms)`);
+console.log(`  RESTART_APP_AFTER_MINUTES: ${config.RESTART_APP_AFTER_MS / 60000} minutes (${config.RESTART_APP_AFTER_MS}ms)`);

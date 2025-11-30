@@ -34,15 +34,15 @@ interface AppConfig {
 
 const config: { apps: AppConfig[] } = {
     apps: [
-        // {
-        //     name: "solaris-style",
-        //     script: "dist/index.js",
-        //     cwd: import.meta.dir,
-        //     env: envStyle,
-        //     instances: 10,
-        //     staggerDelay: 10000, // 10 seconds
-        //     autorestart: true,
-        // },
+        {
+            name: "solaris-style",
+            script: "dist/index.js",
+            cwd: import.meta.dir,
+            env: envStyle,
+            instances: 2,
+            staggerDelay: 10000, // 10 seconds
+            autorestart: true,
+        },
         // {
         //     name: "solaris-prime",
         //     script: "dist/index.js",
@@ -52,15 +52,15 @@ const config: { apps: AppConfig[] } = {
         //     staggerDelay: 20000, // 20 seconds
         //     autorestart: true,
         // },
-        {
-            name: "solaris-grab",
-            script: "dist/index.js",
-            cwd: import.meta.dir,
-            env: envGrab,
-            instances: 2,
-            staggerDelay: 10000, // 10 seconds
-            autorestart: true,
-        },
+        // {
+        //     name: "solaris-grab",
+        //     script: "dist/index.js",
+        //     cwd: import.meta.dir,
+        //     env: envGrab,
+        //     instances: 4,
+        //     staggerDelay: 10000, // 10 seconds
+        //     autorestart: true,
+        // },
     ],
 };
 
