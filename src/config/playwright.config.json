@@ -1,0 +1,21 @@
+{
+    "browser": {
+        "launchOptions": {
+            "args": [
+                "--disable-gpu",
+                "--disable-dev-shm-usage",
+                "--disable-site-isolation-trials"
+            ]
+        },
+        "contextOptions": {
+            "viewport": {
+                "width": 800,
+                "height": 600
+            }
+        }
+    },
+    "capabilities": [
+        "vision"
+    ],
+    "outputDir": "output"
+}

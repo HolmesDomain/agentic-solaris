@@ -23,11 +23,7 @@ export class McpService {
             args: [
                 "-y",
                 "@playwright/mcp@latest",
-                "--isolated",
-                "--caps=vision",
-                // "--headless",
-                // "--browser=firefox",
-                `--output-dir=${outputDir}`
+                `--config=${path.resolve(process.cwd(), "src/config/playwright.config.json")}`
             ],
         });
 
@@ -85,10 +81,7 @@ export class McpService {
             args: [
                 "-y",
                 "@playwright/mcp@latest",
-                "--isolated",
-                "--caps=vision",
-                "--browser=firefox",
-                `--output-dir=${path.resolve(process.cwd(), "output")}`
+                `--config=${path.resolve(process.cwd(), "src/config/playwright.config.json")}`
             ],
         });
 
