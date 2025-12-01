@@ -1,0 +1,207 @@
+{
+    "persona": {
+        "age": 23,
+        "birthdate": "03/15/2002",
+        "race": "White",
+        "gender": "Male",
+        "sexual_orientation": "Heterosexual",
+        "religion": "Christian",
+        "household": "Single",
+        "household_size": 1,
+        "household_decision_maker": {
+            "status": "Sole Decision Maker",
+            "categories": [
+                "Groceries",
+                "Electronics",
+                "Automotive",
+                "Financial Services",
+                "Utilities",
+                "Insurance"
+            ]
+        },
+        "political_affiliation": "Republican",
+        "political_engagement": "Very Active",
+        "political_views": {
+            "core_values": [
+                "Fiscal Responsibility",
+                "Individual Liberty",
+                "Traditional Values"
+            ],
+            "key_issues": [
+                "Strongly Support 2nd Amendment",
+                "Border Security & Immigration Control",
+                "Lower Taxes & Deregulation",
+                "Skeptic of Climate Change regulations"
+            ]
+        },
+        "voter_status": "Yes",
+        "employment_status": "Employed",
+        "employer": "Experis US Inc.",
+        "job_title": "IT Consultant",
+        "industry": "Technology/IT Services",
+        "professional_decision_making": {
+            "role": "Influencer/Recommender",
+            "areas": [
+                "IT Hardware",
+                "Software Development Tools",
+                "Cloud Services",
+                "Cybersecurity Solutions"
+            ]
+        },
+        "salary": 68000,
+        "salary_bracket": "60000-75000",
+        "location": {
+            "zip_code": "85001",
+            "city": "Phoenix",
+            "state": "Arizona",
+            "living_environment": "Rural"
+        },
+        "characteristics": [
+            "tech-savvy",
+            "bleeding-edge technology enthusiast",
+            "IT professional",
+            "sedentary work lifestyle",
+            "pet owner"
+        ],
+        "household_assets": {
+            "pets": [
+                "Dog",
+                "Cat"
+            ],
+            "technology": [
+                "iPhone 15 Pro",
+                "PlayStation 5",
+                "iPad Air",
+                "Apple Watch Series 9",
+                "High-end Gaming PC"
+            ],
+            "vehicles": [
+                {
+                    "year": 2018,
+                    "make": "Honda",
+                    "model": "Civic",
+                    "trim": "Touring",
+                    "mileage": 52000,
+                    "ownership": "Owned"
+                }
+            ]
+        },
+        "education_level": "Bachelor's Degree",
+        "marital_status": "Single",
+        "homeowner_status": "Renter",
+        "vehicle_owner": "Yes",
+        "drivers_license": "Yes",
+        "vehicle_type": "Sedan or SUV",
+        "internet_usage": "Heavy",
+        "shopping_preferences": "Online-first",
+        "social_media_activity": "Active",
+        "social_media_platforms": [
+            "Reddit",
+            "Discord",
+            "X (Twitter)",
+            "YouTube"
+        ],
+        "health_insurance": "Employer-provided",
+        "income_sources": [
+            "W-2 wages",
+            "Self-employment"
+        ],
+        "financial_profile": {
+            "primary_bank": "Chase",
+            "credit_cards": [
+                "Amex Platinum",
+                "Chase Sapphire Reserve"
+            ],
+            "investments": [
+                "Stocks",
+                "ETFs",
+                "Cryptocurrency"
+            ],
+            "investment_frequency": "Active Trader"
+        },
+        "health_profile": {
+            "height": "5'10\"",
+            "weight_lbs": 240,
+            "bmi": 34.4,
+            "bmi_category": "Obese Class I",
+            "physical_activity_level": "Low to Moderate",
+            "exercise_frequency": "1-2 times per week or less",
+            "diet_quality": "Below average",
+            "eating_habits": [
+                "Fast food consumption 3-4 times per week",
+                "Irregular meal times due to work",
+                "Snacking while working",
+                "Limited home cooking"
+            ],
+            "health_concerns": [
+                "Weight management",
+                "Potential for metabolic issues",
+                "Seasonal Allergies",
+                "Migraines",
+                "Anxiety",
+                "High Cholesterol"
+            ],
+            "health_consciousness": "Low to Moderate",
+            "wellness_goals": "Interested but not actively pursuing"
+        },
+        "lifestyle_indicators": {
+            "work_hours": "Long hours, desk-bound",
+            "commute_type": "Vehicle",
+            "meal_preparation": "Mostly takeout/delivery",
+            "grocery_shopping_frequency": "1-2 times per month",
+            "restaurant_frequency": "High - 4-6 times per week",
+            "convenience_priority": "High",
+            "time_constraints": "Moderate to High"
+        },
+        "consumer_behaviors": {
+            "favorite_grocery_store": "Fry's Food Stores",
+            "food_delivery_apps": "Frequent user (DoorDash, Uber Eats)",
+            "meal_kit_services": "Not currently using",
+            "vitamin_supplements": "Occasional",
+            "gym_membership": "No or inactive",
+            "health_app_usage": "Minimal",
+            "subscriptions": [
+                "Amazon Prime",
+                "Netflix",
+                "Spotify Premium",
+                "Costco Membership"
+            ],
+            "automotive_intent": "Intending to buy a new car in next 6-12 months",
+            "dining_preferences": [
+                "Fast casual",
+                "Chain restaurants",
+                "Convenience-focused"
+            ]
+        },
+        "favorite_sport": "Basketball",
+        "favorite_movie_genre": "Science Fiction",
+        "interests": [
+            "PC Gaming",
+            "Open Source Software",
+            "Cryptocurrency",
+            "Tech Hardware"
+        ],
+        "preferences": {
+            "alcohol_consumption": "Social drinker",
+            "favorite_drink": "Craft Beer (IPA)",
+            "music_genre": "Lo-fi Hip Hop",
+            "travel_preference": "Urban Tech Hubs",
+            "travel_profile": {
+                "frequency_domestic": "3-4 times per year",
+                "frequency_international": "1-2 times per year",
+                "upcoming_travel": "International Leisure Trip (Japan) in 6 months",
+                "favorite_destinations_international": [
+                    "Japan",
+                    "South Korea",
+                    "Switzerland",
+                    "New Zealand"
+                ]
+            },
+            "brand_affinity": [
+                "Apple",
+                "NVIDIA",
+                "Tesla"
+            ]
+        }
+    }
+}

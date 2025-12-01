@@ -9,17 +9,16 @@ async function main() {
   console.log("Starting Survey Automation Agent...");
   const startTime = Date.now();
 
+  // Timer flag to signal shutdown
+  let timerExpired = false;
+
   // Start Global Restart Timer
   if (config.RESTART_APP_AFTER_MS > 0) {
-    console.log(`🕒 App restart scheduled after ${(config.RESTART_APP_AFTER_MS / 60000).toFixed(1)} minutes.`);
-    setInterval(() => {
-      const elapsed = Date.now() - startTime;
-      if (elapsed > config.RESTART_APP_AFTER_MS) {
-        console.log(`\n⏰ App has been running for ${(elapsed / 60000).toFixed(1)} minutes. Restart limit is ${(config.RESTART_APP_AFTER_MS / 60000).toFixed(1)} minutes.`);
-        console.log("Initiating scheduled restart...");
-        process.exit(0);
-      }
-    }, 60000); // Check every minute
+    console.log(`🕒 App will run for ${(config.RESTART_APP_AFTER_MS / 60000).toFixed(1)} minutes before logout.`);
+    setTimeout(() => {
+      console.log(`\n⏰ Timer expired after ${(config.RESTART_APP_AFTER_MS / 60000).toFixed(1)} minutes.`);
+      timerExpired = true;
+    }, config.RESTART_APP_AFTER_MS);
   }
 
   // Initialize Services
@@ -34,9 +33,25 @@ async function main() {
   const personaService = new PersonaService();
   const agent = new AgentService(mcp as any, llm);
 
+  // Helper function to logout
+  async function logout() {
+    console.log("\n🚪 Logging out...");
+    try {
+      await agent.runTask(`
+        Navigate to the account settings or profile menu.
+        Find and click the "Log Out", "Sign Out", or "Logout" button.
+        Wait for the logout to complete (you should see the login page or home page).
+      `);
+      console.log("✅ Logged out successfully.");
+    } catch (e) {
+      console.error("⚠️ Logout failed:", e);
+    }
+  }
+
   try {
     await mcp.connect();
 
+    // Step 1: Login
     const loginTask = `Visit ${config.TARGET_HOST}. 
     Check if we are logged in. 
     If not, login with email: ${config.TARGET_EMAIL} and password: ${config.TARGET_PASSWORD}.`;
@@ -55,6 +70,16 @@ async function main() {
     }
 
     const selectSurveyTask = `Select the survey ${strategyDescription} and a descriptor of similar format: "Survey (5353051...)". 
+    
+    AVOID THESE PROVIDERS (they often have no surveys):
+    - Prime Surveys (monetize.primeearn.com) - frequently shows "No surveys at the moment"
+    - Any provider showing "No surveys", "Come back later", or empty survey lists
+    
+    IF you click a provider and see "No surveys at the moment" or similar:
+    1. Go back to the main surveys page
+    2. Try a DIFFERENT survey provider/tile
+    3. Do NOT waste time on empty providers
+    
     Wait for the survey modal to load.
     Begin the survey and wait for it to load, it will open a new tab.`;
     await agent.runTask(selectSurveyTask);
@@ -66,35 +91,48 @@ async function main() {
     let surveyCompleted = false;
 
     for (let i = 0; i < MAX_CHUNKS; i++) {
+      // Check if timer expired
+      if (timerExpired) {
+        console.log("\n⏰ Timer expired. Breaking out of survey loop...");
+        break;
+      }
+
       console.log(`\n--- Chunk ${i + 1} / ${MAX_CHUNKS} ---`);
 
       const answerTask = `
-      You are completing a survey. You are a 23-year-old IT Consultant embodying this persona:
+      You are completing a survey as a 23-year-old IT Consultant with this persona:
       ${personaService.getFormattedPersona()}
 
-      CRITICAL TASK: You MUST answer EXACTLY ${QUESTIONS_PER_CHUNK} survey questions.
+      CRITICAL TASK: Answer EXACTLY ${QUESTIONS_PER_CHUNK} survey questions, then STOP.
       CURRENT PROGRESS: Chunk ${i + 1} of ${MAX_CHUNKS}.
 
+      RULES:
+      1. Keep count: "Question 1/${QUESTIONS_PER_CHUNK}", "Question 2/${QUESTIONS_PER_CHUNK}", etc.
+      2. For EACH question:
+         - Read carefully
+         - Select/type the persona-appropriate answer
+         - Click "Next" or "Continue" (NEVER "Skip")
+         - Increment count
+      3. After answering question ${QUESTIONS_PER_CHUNK}/${QUESTIONS_PER_CHUNK} and clicking Next, STOP immediately.
+      4. If you see "Welcome back" or "Start Survey", click it (counts as setup, not a question).
+
       IMPORTANT CHECKS:
-      - **STRICTLY** stick to the domain provided in the task: ${config.TARGET_HOST}. 
-      - If you find yourself on an unexpected domain (e.g., google.com, swagbucks.com) without a clear reason, immediately navigate back to the start URL.
-      - **IF YOU ARE LOGGED OUT**: If you are redirected to a login page or asked to sign in, use these credentials:
-        - Email: ${config.TARGET_EMAIL}
-        - Password: ${config.TARGET_PASSWORD}
-      - Did you start a survey and forget it in a separate browser tab? Check your open tabs if you are not on a survey page.
-      - ALWAYS verify you are on the correct tab before performing actions.
-      - **NEVER SKIP QUESTIONS**: You must NEVER skip a survey question. Always select an answer that aligns with the defined persona. If a question is optional, answer it anyway.
-      - **Complete Question BEFORE clicking "Next"**
-      - Keep a mental count: "Question 1 of ${QUESTIONS_PER_CHUNK}", "Question 2 of ${QUESTIONS_PER_CHUNK}", etc.
-      - For EACH question:
-        1. Read the question carefully.
-        2. Select/type the answer that this persona would give.
-        3. Click the actual answer option OR type in the text field.
-        4. Click "Next" or "Continue" (NOT "Skip").
-        5. Increment your count.
-        6. ALWAYS use VISION CAPABILITES/ TOOLS. Solve them, do not skip. (Spectrum Surveys for example)
-      
-      - If you see "Welcome back" or "Start Survey", click it and count it as 0 (setup).
+      - Stay on ${config.TARGET_HOST}. If redirected elsewhere, navigate back immediately.
+      - If logged out, re-login with: ${config.TARGET_EMAIL} / ${config.TARGET_PASSWORD}
+      - Check open tabs - you may have a survey in another tab.
+      - Verify you're on the correct tab before acting.
+
+      TAB MANAGEMENT:
+      - If you see "disqualified", "not a match", "survey closed", or similar → CLOSE that tab immediately using browser_tabs with action "close".
+      - If you see "Thank you for your participation" or completion message → CLOSE that tab.
+      - If you see "No surveys at the moment" or "come back later" → CLOSE that tab and go back to pick a different provider.
+      - Keep only 1-2 survey tabs open at a time. Close old/stale tabs.
+      - The main dashboard tab (index 0) should stay open.
+
+      NEVER SKIP:
+      - Questions (even optional ones - always answer)
+      - CAPTCHAs - use browser_take_screenshot to SEE the image, then READ and TYPE the exact text
+      - Visual challenges like Spectrum Surveys - use browser_take_screenshot first
       `;
 
       try {
@@ -134,27 +172,25 @@ async function main() {
       }
     }
 
-    if (!surveyCompleted) {
+    // Print token stats
+    const stats = agent.getTokenStats();
+    console.log("\n=== Token Usage Summary ===");
+    console.log(`Total: ${stats.total_tokens}`);
+    console.log(`Prompt: ${stats.prompt_tokens}`);
+    console.log(`Completion: ${stats.completion_tokens}`);
+    console.log("===========================\n");
+
+    // Always logout before exiting
+    await logout();
+
+    if (timerExpired) {
+      console.log("\n⏰ Exiting due to timer expiration.");
+      process.exit(0);
+    } else if (!surveyCompleted) {
       console.log("\n❌ Max chunks reached without completion. Exiting with error to trigger restart.");
-
-      const stats = agent.getTokenStats();
-      console.log("\n=== Token Usage Summary ===");
-      console.log(`Total: ${stats.total_tokens}`);
-      console.log(`Prompt: ${stats.prompt_tokens}`);
-      console.log(`Completion: ${stats.completion_tokens}`);
-      console.log("===========================\n");
-
       process.exit(1);
     } else {
       console.log("\n✅ Workflow completed successfully.");
-
-      const stats = agent.getTokenStats();
-      console.log("\n=== Token Usage Summary ===");
-      console.log(`Total: ${stats.total_tokens}`);
-      console.log(`Prompt: ${stats.prompt_tokens}`);
-      console.log(`Completion: ${stats.completion_tokens}`);
-      console.log("===========================\n");
-
       process.exit(0);
     }
 

@@ -2,15 +2,21 @@
     "browser": {
         "launchOptions": {
             "args": [
-                "--disable-gpu",
                 "--disable-dev-shm-usage",
-                "--disable-site-isolation-trials"
+                "--disable-background-networking",
+                "--disable-default-apps",
+                "--disable-sync",
+                "--disable-component-update",
+                "--disable-domain-reliability",
+                "--disable-client-side-phishing-detection",
+                "--no-first-run",
+                "--safebrowsing-disable-auto-update"
             ]
         },
         "contextOptions": {
             "viewport": {
-                "width": 800,
-                "height": 600
+                "width": 1280,
+                "height": 720
             }
         }
     },

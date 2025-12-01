@@ -22,10 +22,6 @@ yarn-error.log*
 # Test coverage
 coverage/
 
-# Dir
-src/data/
-!src/data/persona.json
-
 # PM2 env files
 .env.style
 .env.prime

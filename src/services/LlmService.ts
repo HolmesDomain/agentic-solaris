@@ -7,8 +7,8 @@ export class LlmService {
 
     constructor() {
         this.openai = new OpenAI({
-            baseURL: config.OPENROUTER_BASE_URL,
-            apiKey: config.OPENROUTER_API_KEY,
+            baseURL: config.LLM_BASE_URL,
+            apiKey: config.LLM_API_KEY,
             maxRetries: 5, // Increase default retries for 429/5xx
         });
         this.model = config.MODEL_NAME;

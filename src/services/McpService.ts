@@ -23,6 +23,7 @@ export class McpService {
             args: [
                 "-y",
                 "@playwright/mcp@latest",
+                "--isolated",
                 `--config=${path.resolve(process.cwd(), "src/config/playwright.config.json")}`
             ],
         });
@@ -81,6 +82,7 @@ export class McpService {
             args: [
                 "-y",
                 "@playwright/mcp@latest",
+                "--isolated",
                 `--config=${path.resolve(process.cwd(), "src/config/playwright.config.json")}`
             ],
         });

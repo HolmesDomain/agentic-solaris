@@ -39,19 +39,19 @@ const config: { apps: AppConfig[] } = {
             script: "dist/index.js",
             cwd: import.meta.dir,
             env: envStyle,
-            instances: 2,
+            instances: 4,
             staggerDelay: 10000, // 10 seconds
             autorestart: true,
         },
-        // {
-        //     name: "solaris-prime",
-        //     script: "dist/index.js",
-        //     cwd: import.meta.dir,
-        //     env: envPrime,
-        //     instances: 7,
-        //     staggerDelay: 20000, // 20 seconds
-        //     autorestart: true,
-        // },
+        {
+            name: "solaris-prime",
+            script: "dist/index.js",
+            cwd: import.meta.dir,
+            env: envPrime,
+            instances: 5,
+            staggerDelay: 10000, // 20 seconds
+            autorestart: true,
+        },
         // {
         //     name: "solaris-grab",
         //     script: "dist/index.js",
@@ -71,13 +71,14 @@ let isShuttingDown = false;
 function startProcess(app: AppConfig, instanceNum: number) {
     const procId = `${app.name}-${instanceNum}`;
 
-    const proc = spawn(["bun", "run", app.script], {
+    const proc = spawn(["bun", "run", "--smol", app.script], {
         cwd: app.cwd,
         env: {
             ...process.env,
             ...app.env,
             INSTANCE_ID: instanceNum.toString(),
             PROCESS_NAME: procId,
+            NODE_OPTIONS: "--max-old-space-size=256",
         },
         stdout: "pipe",
         stderr: "pipe",
@@ -86,13 +87,15 @@ function startProcess(app: AppConfig, instanceNum: number) {
             processes.delete(procId);
 
             if (app.autorestart && !isShuttingDown) {
-                console.log(`[${procId}] Restarting in 5 seconds...`);
+                // Random delay prevents all instances restarting simultaneously
+                const restartDelay = 10000 + Math.random() * 10000; // 10-20 seconds
+                console.log(`[${procId}] Restarting in ${Math.round(restartDelay / 1000)}s...`);
                 setTimeout(() => {
                     if (!isShuttingDown) {
                         console.log(`[${procId}] Restarting now...`);
                         startProcess(app, instanceNum);
                     }
-                }, 5000);
+                }, restartDelay);
             }
         },
     });
