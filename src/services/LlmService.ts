@@ -30,7 +30,10 @@ export class LlmService {
                     messages,
                     tools,
                     tool_choice: toolChoice,
-                });
+                    reasoning: {
+                        effort: 'medium'  // Can be 'low', 'medium', or 'high'
+                    }
+                } as any);
             } catch (error: any) {
                 lastError = error;
 

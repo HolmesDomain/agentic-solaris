@@ -39,7 +39,7 @@ const config: { apps: AppConfig[] } = {
             script: "dist/index.js",
             cwd: import.meta.dir,
             env: envStyle,
-            instances: 4,
+            instances: 5,
             staggerDelay: 10000, // 10 seconds
             autorestart: true,
         },
