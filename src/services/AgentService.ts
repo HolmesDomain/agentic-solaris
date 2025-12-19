@@ -42,14 +42,14 @@ export class AgentService {
             // We want to keep: [0] system, [1] task, then last KEEP_RECENT_TURNS*3 messages (assistant + tool responses + possible user)
             const keepFromEnd = AgentService.KEEP_RECENT_TURNS * 3; // ~3 messages per turn
             const removeCount = messages.length - 2 - keepFromEnd; // Keep first 2, remove middle, keep last N
-            
+
             if (removeCount > 0) {
                 // Splice out the middle messages, keep system (0), task (1), and recent turns
                 messages.splice(2, removeCount, {
                     role: "system",
                     content: `[Context pruned: ${removeCount} older messages removed to manage tokens]`
                 } as any);
-                
+
                 console.log(`[Context Management] Pruned ${removeCount} old messages. Now: ${messages.length} messages.`);
             }
         }

@@ -1,8 +1,19 @@
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import { McpService } from "./McpService.js";
+
+/**
+ * Interface for browser tool services
+ * Allows PlaywrightWrapperService to work with both McpService and PlaywrightDirectService
+ */
+export interface IBrowserService {
+    connect(): Promise<void>;
+    getTools(): Promise<any[]>;
+    callTool(name: string, args: any): Promise<CallToolResult>;
+    close(): Promise<void>;
+    restart(): Promise<void>;
+}
 
 export class PlaywrightWrapperService {
-    private mcp: McpService;
+    private mcp: IBrowserService;
     private maxPages: number;
     private restartAfterPages: number;
     private pageIdleTimeoutMs: number;
@@ -10,7 +21,7 @@ export class PlaywrightWrapperService {
     private browserContext: any = null;
     private tabActivity: Map<number, number> = new Map(); // Index -> Last Active Timestamp
 
-    constructor(mcp: McpService, maxPages: number, restartAfterPages: number = 0, pageIdleTimeoutMs: number = 15000) {
+    constructor(mcp: IBrowserService, maxPages: number, restartAfterPages: number = 0, pageIdleTimeoutMs: number = 15000) {
         this.mcp = mcp;
         this.maxPages = maxPages;
         this.restartAfterPages = restartAfterPages;

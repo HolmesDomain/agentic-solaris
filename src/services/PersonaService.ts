@@ -1,50 +1,75 @@
-import { config } from "../config/env";
-import path from "path";
+/**
+ * PersonaService - Manages persona data for survey completion
+ */
+
 import fs from "fs";
+import path from "path";
+import { config } from "../config/env.js";
+
+interface Persona {
+    [key: string]: any;
+}
 
 export class PersonaService {
-    private persona: any;
+    private persona: Persona;
 
     constructor() {
-        // Use process.cwd() since we run from project root, data files stay in src/data/
-        const personaPath = path.join(process.cwd(), "src", "data", `${config.PERSONA}.json`);
-        
-        if (!fs.existsSync(personaPath)) {
-            console.error(`❌ Persona file not found: ${personaPath}`);
-            console.error(`   Available personas: tyler, tina`);
-            process.exit(1);
-        }
-        
-        const personaData = JSON.parse(fs.readFileSync(personaPath, "utf-8"));
-        this.persona = personaData.persona;
-        console.log(`👤 Loaded persona: ${config.PERSONA}`);
+        this.persona = this.loadPersona();
     }
 
-    getPersona(): any {
+    private loadPersona(): Persona {
+        const personaPath = path.join(process.cwd(), "personas", `${config.PERSONA}.json`);
+
+        try {
+            if (fs.existsSync(personaPath)) {
+                const data = fs.readFileSync(personaPath, "utf-8");
+                console.log(`👤 Loaded persona: ${config.PERSONA}`);
+                return JSON.parse(data);
+            }
+        } catch (e) {
+            console.warn(`⚠️ Could not load persona ${config.PERSONA}:`, e);
+        }
+
+        // Return default persona
+        console.log("👤 Using default persona");
+        return {
+            age: 25,
+            gender: "Male",
+            occupation: "Software Developer",
+            location: "United States",
+            education: "Bachelor's Degree",
+        };
+    }
+
+    getPersona(): Persona {
         return this.persona;
     }
 
     getFormattedPersona(): string {
         const lines: string[] = [];
-        const processObj = (obj: any, prefix = "") => {
-            for (const [key, value] of Object.entries(obj)) {
-                if (typeof value === "object" && value !== null && !Array.isArray(value)) {
-                    processObj(value, prefix ? `${prefix} ${key}` : key);
-                } else if (Array.isArray(value)) {
-                    // Handle arrays of objects (like vehicles)
-                    const formatted = value.map(item => {
-                        if (typeof item === "object" && item !== null) {
-                            return Object.entries(item).map(([k, v]) => `${k}: ${v}`).join(", ");
-                        }
-                        return item;
-                    }).join("; ");
-                    lines.push(`${prefix ? prefix + " " : ""}${key}: ${formatted}`);
-                } else {
-                    lines.push(`${prefix ? prefix + " " : ""}${key}: ${value}`);
+
+        const formatValue = (key: string, value: any, prefix = ""): void => {
+            if (value === null || value === undefined) return;
+
+            if (typeof value === "object" && !Array.isArray(value)) {
+                for (const [k, v] of Object.entries(value)) {
+                    formatValue(k, v, `${prefix}${key} `);
                 }
+            } else if (Array.isArray(value)) {
+                lines.push(`${prefix}${key}: ${value.join("; ")}`);
+            } else {
+                lines.push(`${prefix}${key}: ${value}`);
             }
         };
-        processObj(this.persona);
+
+        for (const [key, value] of Object.entries(this.persona)) {
+            formatValue(key, value);
+        }
+
         return lines.join("\n");
+    }
+
+    getValue(key: string): any {
+        return this.persona[key];
     }
 }

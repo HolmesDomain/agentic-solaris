@@ -1,6 +1,5 @@
 import { config } from "./src/config/env.js";
 import { McpService } from "./src/services/McpService.js";
-import { PlaywrightWrapperService } from "./src/services/PlaywrightWrapperService.js";
 import { LlmService } from "./src/services/LlmService.js";
 import { AgentService } from "./src/services/AgentService.js";
 import { PersonaService } from "./src/services/PersonaService.js";
@@ -21,14 +20,8 @@ async function main() {
     }, config.RESTART_APP_AFTER_MS);
   }
 
-  // Initialize Services
-  const mcpRaw = new McpService();
-  const mcp = new PlaywrightWrapperService(
-    mcpRaw,
-    config.MAX_PAGES,
-    config.RESTART_AFTER_PAGES,
-    config.PAGE_IDLE_TIMEOUT_MS
-  );
+  // Initialize Services - using Puppeteer MCP (direct, no subprocess)
+  const mcp = new McpService();
   const llm = new LlmService();
   const personaService = new PersonaService();
   const agent = new AgentService(mcp as any, llm);
@@ -155,16 +148,9 @@ async function main() {
         console.log("Survey Completed!");
         surveyCompleted = true;
 
-        // Close all browser tabs
-        console.log("Closing browser tabs...");
-        const tabs = await mcp.getTabsState();
-        for (const tab of tabs) {
-          try {
-            await mcp.callTool("browser_tabs", { action: "close", index: tab.index });
-          } catch (e) {
-            console.error(`Failed to close tab ${tab.index}:`, e);
-          }
-        }
+        // Close browser
+        console.log("Closing browser...");
+        await mcp.close();
 
         break;
       } else {
@@ -198,7 +184,7 @@ async function main() {
     console.error("Workflow failed:", error);
     process.exit(1);
   } finally {
-    await mcpRaw.close();
+    await mcp.close();
   }
 }
 
